@@ -1,0 +1,155 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbox-nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: netbox
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      initContainers:
+
+        - name: nginx-init
+          image: image-registry.openshift-image-registry.svc:5000/moc-ops/netbox-init:3
+          command: ["sh"]
+          args: ["-c", "tar -C /data/nginx -cf- . | tar -C /vol/copy-to -xf-"]
+          volumeMounts:
+            - mountPath: /vol/copy-to
+              name: netbox-nginx-config
+
+      containers:
+
+        - name: nginx
+          image: nginx:1.19-alpine
+          ports:
+            - containerPort: 8080
+              name: nginx
+          volumeMounts:
+            - mountPath: /opt/netbox/netbox/static
+              name: netbox-static-files
+              readOnly: true
+            - mountPath: /etc/netbox-nginx
+              name: netbox-nginx-config
+              readOnly: true
+            - mountPath: /var/cache/nginx
+              name: nginx-cache
+            - mountPath: /var/run
+              name: nginx-cache
+          command:
+            - nginx
+          args:
+            - -c
+            - /etc/netbox-nginx/nginx.conf
+
+      volumes:
+        - name: netbox-static-files
+          persistentVolumeClaim:
+            claimName: netbox-static-files
+        - name: netbox-nginx-config
+          emptyDir:
+        - name: nginx-cache
+          emptyDir:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbox-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netbox
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      containers:
+
+        - name: postgres
+          image: postgres:13-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          volumeMounts:
+            - mountPath: /var/lib/postgresql
+              name: postgres-data
+          env:
+            - name: POSTGRES_USER
+              value: netbox
+            - name: POSTGRES_DB
+              value: netbox
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: netbox
+                  key: POSTGRES_PASSWORD
+
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbox-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netbox
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      containers:
+
+        - name: redis
+          image: redis:5-alpine
+          ports:
+            - containerPort: 6379
+              name: redis
+          args:
+            - --appendonly yes
+          volumeMounts:
+            - mountPath: /data
+              name: redis-data
+
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbox-redis-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netbox
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      containers:
+
+        - name: redis-cache
+          image: redis:5-alpine
+          ports:
+            - containerPort: 6379
+              name: redis-cache
+          volumeMounts:
+            - mountPath: /data
+              name: redis-cache-data
+
+      volumes:
+        - name: redis-cache-data
+          persistentVolumeClaim:
+            claimName: redis-cache-data

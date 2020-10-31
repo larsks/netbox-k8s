@@ -1,0 +1,89 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netbox
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      initContainers:
+        - name: netbox-init
+          image: image-registry.openshift-image-registry.svc:5000/moc-ops/netbox-init:3
+          command: ["sh"]
+          args: ["-c", "tar -C /data -cf- . | tar -C /target -xf-"]
+          volumeMounts:
+            - mountPath: /target
+              name: netbox-init-data
+
+      containers:
+
+        - name: netbox
+          image: netboxcommunity/netbox:v2.9-ldap
+          envFrom:
+            - configMapRef:
+                name: netbox-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: netbox
+                  key: POSTGRES_PASSWORD
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: netbox
+                  key: SECRET_KEY
+            - name: SUPERUSER_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: netbox
+                  key: SUPERUSER_API_TOKEN
+          ports:
+            - containerPort: 8001
+              name: netbox
+          volumeMounts:
+            - mountPath: /init-data
+              name: netbox-init-data
+              readOnly: true
+            - mountPath: /opt/netbox/startup_scripts
+              name: netbox-init-data
+              subPath: startup_scripts
+              readOnly: true
+            - mountPath: /opt/netbox/initializers
+              name: netbox-init-data
+              subPath: initializers
+              readOnly: true
+            - mountPath: /etc/netbox/config
+              name: netbox-init-data
+              subPath: configuration
+              readOnly: true
+            - mountPath: /etc/netbox/reports
+              name: netbox-init-data
+              subPath: reports
+              readOnly: true
+            - mountPath: /etc/netbox/scripts
+              name: netbox-init-data
+              subPath: scripts
+              readOnly: true
+            - mountPath: /opt/netbox/netbox/static
+              name: netbox-static-files
+            - mountPath: /opt/netbox/netbox/media
+              name: netbox-media-files
+
+      volumes:
+        - name: netbox-static-files
+          persistentVolumeClaim:
+            claimName: netbox-static-files
+        - name: netbox-media-files
+          persistentVolumeClaim:
+            claimName: netbox-media-files
+        - name: netbox-init-data
+          persistentVolumeClaim:
+            claimName: netbox-init-data
+

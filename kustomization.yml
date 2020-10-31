@@ -1,0 +1,18 @@
+---
+namespace: moc-ops
+commonLabels:
+  app: netbox
+
+resources:
+  - deployment-infra.yml
+  - deployment-netbox.yml
+  - volumes.yml
+  - services.yml
+
+configMapGenerator:
+  - name: netbox-config
+    envs:
+      - netbox-config.env
+
+generators:
+  - secret-generator.yml
