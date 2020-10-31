@@ -110,7 +110,7 @@ spec:
       containers:
 
         - name: redis
-          image: redis:5-alpine
+          image: redis:6-alpine
           ports:
             - containerPort: 6379
               name: redis
@@ -141,7 +141,7 @@ spec:
       containers:
 
         - name: redis-cache
-          image: redis:5-alpine
+          image: redis:6-alpine
           ports:
             - containerPort: 6379
               name: redis-cache
