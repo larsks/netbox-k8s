@@ -13,6 +13,9 @@ configMapGenerator:
   - name: netbox-config
     envs:
       - netbox-config.env
+  - name: netbox-init-scripts
+    files:
+      - init-netbox-data.sh
 
 generators:
   - secret-generator.yml

@@ -14,12 +14,14 @@ spec:
     spec:
       initContainers:
         - name: netbox-init
-          image: image-registry.openshift-image-registry.svc:5000/moc-ops/netbox-init:4
+          image: alpine/git:v2.26.2
           command: ["sh"]
-          args: ["-c", "tar -C /data -cf- . | tar -C /target -xf-"]
+          args: ["/scripts/init-netbox-data.sh"]
           volumeMounts:
             - mountPath: /target
               name: netbox-init-data
+            - mountPath: /scripts
+              name: netbox-init-scripts
 
       containers:
 
@@ -86,4 +88,6 @@ spec:
         - name: netbox-init-data
           persistentVolumeClaim:
             claimName: netbox-init-data
-
+        - name: netbox-init-scripts
+          configMap:
+            name: netbox-init-scripts
