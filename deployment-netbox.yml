@@ -27,10 +27,10 @@ spec:
 
         - name: netbox
           image: netboxcommunity/netbox:v2.9-ldap
-          envFrom:
+          envFrom: &envFrom
             - configMapRef:
                 name: netbox-config
-          env:
+          env: &env
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -46,10 +46,10 @@ spec:
                 secretKeyRef:
                   name: netbox
                   key: SUPERUSER_API_TOKEN
-          ports:
+          ports: &ports
             - containerPort: 8001
               name: netbox
-          volumeMounts:
+          volumeMounts: &volumeMounts
             - mountPath: /init-data
               name: netbox-init-data
               readOnly: true
@@ -77,6 +77,20 @@ spec:
               name: netbox-static-files
             - mountPath: /opt/netbox/netbox/media
               name: netbox-media-files
+
+        - name: netbox-worker
+          image: netboxcommunity/netbox:v2.9-ldap
+          command:
+            - python3
+            - /opt/netbox/netbox/manage.py
+          args:
+            - rqworker
+          envFrom: *envFrom
+          env: *env
+          ports:
+            - containerPort: 8001
+              name: netbox-worker
+          volumeMounts: *volumeMounts
 
       volumes:
         - name: netbox-static-files
