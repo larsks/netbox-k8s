@@ -26,7 +26,7 @@ spec:
       containers:
 
         - name: netbox
-          image: netboxcommunity/netbox:v2.9-ldap
+          image: netboxcommunity/netbox:v2.9.8-ldap
           envFrom: &envFrom
             - configMapRef:
                 name: netbox-config
