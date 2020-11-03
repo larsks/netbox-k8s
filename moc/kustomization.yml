@@ -1,0 +1,10 @@
+---
+namespace: moc-ops
+commonLabels:
+  app: netbox
+
+resources:
+  - ../base
+
+generators:
+  - secret-generator.yml

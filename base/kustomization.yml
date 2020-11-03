@@ -1,5 +1,4 @@
 ---
-namespace: moc-ops
 commonLabels:
   app: netbox
 
@@ -16,6 +15,3 @@ configMapGenerator:
   - name: netbox-init-scripts
     files:
       - init-netbox-data.sh
-
-generators:
-  - secret-generator.yml

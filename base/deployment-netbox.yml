@@ -49,6 +49,19 @@ spec:
           ports: &ports
             - containerPort: 8001
               name: netbox
+          startupProbe:
+            httpGet:
+              port: netbox
+              path: /
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              port: netbox
+              path: /
+            initialDelaySeconds: 1
+            periodSeconds: 10
           volumeMounts: &volumeMounts
             - mountPath: /init-data
               name: netbox-init-data
