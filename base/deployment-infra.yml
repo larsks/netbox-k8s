@@ -12,16 +12,6 @@ spec:
     type: Recreate
   template:
     spec:
-      initContainers:
-
-        - name: nginx-init
-          image: image-registry.openshift-image-registry.svc:5000/moc-ops/netbox-init:3
-          command: ["sh"]
-          args: ["-c", "tar -C /data/nginx -cf- . | tar -C /vol/copy-to -xf-"]
-          volumeMounts:
-            - mountPath: /vol/copy-to
-              name: netbox-nginx-config
-
       containers:
 
         - name: nginx
